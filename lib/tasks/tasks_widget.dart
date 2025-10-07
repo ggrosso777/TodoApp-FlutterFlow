@@ -1,4 +1,5 @@
 import '/auth/firebase_auth/auth_util.dart';
+import '/backend/api_requests/api_calls.dart';
 import '/backend/backend.dart';
 import '/components/add_task_widget.dart';
 import '/components/task_widget.dart';
@@ -7,7 +8,9 @@ import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
 import '/index.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'tasks_model.dart';
 export 'tasks_model.dart';
 
@@ -31,6 +34,37 @@ class _TasksWidgetState extends State<TasksWidget> {
     super.initState();
     _model = createModel(context, () => TasksModel());
 
+    // On page load action.
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      _model.zenQuote = await ZenQuoteCall.call();
+
+      if ((_model.zenQuote?.succeeded ?? true)) {
+        FFAppState().quote = ZenQuoteCall.quote(
+          (_model.zenQuote?.jsonBody ?? ''),
+        )!;
+        FFAppState().author = ZenQuoteCall.author(
+          (_model.zenQuote?.jsonBody ?? ''),
+        )!;
+        safeSetState(() {});
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              getJsonField(
+                (_model.zenQuote?.jsonBody ?? ''),
+                r'''$[:].h''',
+              ).toString(),
+              style: TextStyle(
+                color: FlutterFlowTheme.of(context).primaryText,
+              ),
+            ),
+            duration: Duration(milliseconds: 4000),
+            backgroundColor: FlutterFlowTheme.of(context).secondary,
+          ),
+        );
+      }
+    });
+
     WidgetsBinding.instance.addPostFrameCallback((_) => safeSetState(() {}));
   }
 
@@ -43,6 +77,8 @@ class _TasksWidgetState extends State<TasksWidget> {
 
   @override
   Widget build(BuildContext context) {
+    context.watch<FFAppState>();
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -205,6 +241,59 @@ class _TasksWidgetState extends State<TasksWidget> {
                             },
                           );
                         },
+                      ),
+                    ),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Text(
+                            FFAppState().quote,
+                            style: FlutterFlowTheme.of(context)
+                                .bodyMedium
+                                .override(
+                                  font: GoogleFonts.inter(
+                                    fontWeight: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .fontWeight,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .fontStyle,
+                                  ),
+                                  letterSpacing: 0.0,
+                                  fontWeight: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .fontWeight,
+                                  fontStyle: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .fontStyle,
+                                ),
+                          ),
+                          Text(
+                            FFAppState().author,
+                            style: FlutterFlowTheme.of(context)
+                                .bodyMedium
+                                .override(
+                                  font: GoogleFonts.inter(
+                                    fontWeight: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .fontWeight,
+                                    fontStyle: FlutterFlowTheme.of(context)
+                                        .bodyMedium
+                                        .fontStyle,
+                                  ),
+                                  letterSpacing: 0.0,
+                                  fontWeight: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .fontWeight,
+                                  fontStyle: FlutterFlowTheme.of(context)
+                                      .bodyMedium
+                                      .fontStyle,
+                                ),
+                          ),
+                        ].divide(SizedBox(height: 5.0)),
                       ),
                     ),
                     FFButtonWidget(
